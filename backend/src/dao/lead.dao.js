@@ -12,6 +12,19 @@ class LeadDao {
             where: { userId },
         });
     }
+
+    async getLeadById(id, userId) {
+        return await prisma.lead.findFirst({
+            where: { id: parseInt(id), userId },
+        });
+    }
+
+    async updateLead(id, userId, data) {
+        return await prisma.lead.update({
+            where: { id: parseInt(id), userId },
+            data,
+        });
+    }
 }
 
 module.exports = new LeadDao();

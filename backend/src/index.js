@@ -3,8 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
-const authRoutes = require("./routes.js/auth.routes.js");
-const leadRoutes = require("./routes.js/lead.routes.js");
+const authRoutes = require("./routes/auth.routes.js");
+const leadRoutes = require("./routes/lead.routes.js");
 
 const app = express();
 
