@@ -7,6 +7,7 @@ const {
     updateLead,
     deleteLead,
     convertLead,
+    rescoreLead,
 } = require("../controllers/lead.controller");
 
 router.post("/", auth, createLead);
@@ -15,5 +16,6 @@ router.get("/:id", auth, getLead);
 router.patch("/:id", auth, updateLead);
 router.delete("/:id", auth, deleteLead);
 router.post("/:id/convert", auth, convertLead);
+router.post("/:id/score", auth, rescoreLead);
 
 module.exports = router;

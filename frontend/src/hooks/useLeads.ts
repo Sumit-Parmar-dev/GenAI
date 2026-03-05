@@ -85,5 +85,14 @@ export const useLead = (id: string) => {
         },
     });
 
-    return { getLead, updateLeadMutation, deleteLeadMutation, convertLeadMutation };
+    const rescoreLeadMutation = useMutation({
+        mutationFn: () =>
+            apiRequest(`/leads/${id}/score`, { method: "POST" }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["lead", id] });
+            queryClient.invalidateQueries({ queryKey: ["leads"] });
+        },
+    });
+
+    return { getLead, updateLeadMutation, deleteLeadMutation, convertLeadMutation, rescoreLeadMutation };
 };

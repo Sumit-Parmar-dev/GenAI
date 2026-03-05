@@ -10,7 +10,7 @@ import { ScoreBadge, PriorityLabel } from "@/components/ScoreBadge";
 import {
     Loader2, ArrowLeft, Mail, Building, Briefcase, Globe,
     Calendar, FileText, Phone, DollarSign, Sparkles, CheckCircle2,
-    Trash2, Bot, MailOpen, Link2,
+    Trash2, Bot, MailOpen, Link2, Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,9 +31,18 @@ const categoryColor: Record<string, string> = {
 export default function LeadDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { getLead, updateLeadMutation, deleteLeadMutation, convertLeadMutation } = useLead(id!);
+    const { getLead, updateLeadMutation, deleteLeadMutation, convertLeadMutation, rescoreLeadMutation } = useLead(id!);
 
     const { data: lead, isLoading } = getLead;
+
+    const handleRescore = async () => {
+        try {
+            await rescoreLeadMutation.mutateAsync();
+            toast.success("Lead re-scored with AI!");
+        } catch (error: any) {
+            toast.error(error.message || "ML service unavailable");
+        }
+    };
 
     const handleStatusChange = async (newStatus: string) => {
         try {
@@ -236,6 +245,17 @@ export default function LeadDetail() {
                         <CardContent className="flex flex-col items-center gap-3">
                             <ScoreBadge score={lead.aiScore} className="text-2xl px-4 py-2" />
                             <PriorityLabel score={lead.aiScore} />
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full mt-1 gap-1.5"
+                                onClick={handleRescore}
+                                disabled={rescoreLeadMutation.isPending}
+                            >
+                                {rescoreLeadMutation.isPending
+                                    ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Scoring...</>
+                                    : <><Wand2 className="h-3.5 w-3.5" /> Re-score with AI</>}
+                            </Button>
                         </CardContent>
                     </Card>
 

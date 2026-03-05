@@ -1,6 +1,7 @@
-FROM node:20-alpine
+FROM python:3.11-slim
 WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-# If there were a package.json, we would run npm install
-# RUN npm install
-CMD ["node", "a.js"]
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
