@@ -27,6 +27,7 @@ export function TopNavbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('token');
     navigate("/login");
   };
 

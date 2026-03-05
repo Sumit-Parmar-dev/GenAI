@@ -48,14 +48,17 @@ export default function Leads() {
     const fd = new FormData(e.currentTarget);
 
     try {
+      const budgetVal = fd.get("budget") as string;
       await createLeadMutation.mutateAsync({
         name: fd.get("name") as string,
         email: fd.get("email") as string,
+        phone: fd.get("phone") as string || undefined,
         company: fd.get("company") as string,
         jobRole: fd.get("jobRole") as string,
         industry: fd.get("industry") as string,
+        budget: budgetVal ? parseFloat(budgetVal) : undefined,
         notes: fd.get("notes") as string,
-        source: "Manual",
+        source: (fd.get("source") as string) || "Manual",
         status: "New",
       });
       setDialogOpen(false);
@@ -97,16 +100,41 @@ export default function Leads() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="company">Company</Label>
-                    <Input id="company" name="company" required />
+                    <Input id="company" name="company" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="jobRole">Job Role</Label>
-                    <Input id="jobRole" name="jobRole" required />
+                    <Input id="jobRole" name="jobRole" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" name="phone" type="tel" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="budget">Budget ($)</Label>
+                    <Input id="budget" name="budget" type="number" min="0" step="0.01" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="industry">Industry</Label>
-                  <Input id="industry" name="industry" required />
+                  <Input id="industry" name="industry" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="source">Source</Label>
+                  <Select name="source" defaultValue="Manual">
+                    <SelectTrigger id="source">
+                      <SelectValue placeholder="Select source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Manual">Manual</SelectItem>
+                      <SelectItem value="Website">Website</SelectItem>
+                      <SelectItem value="Referral">Referral</SelectItem>
+                      <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                      <SelectItem value="Cold Outreach">Cold Outreach</SelectItem>
+                      <SelectItem value="Event">Event</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="notes">Notes</Label>
@@ -188,7 +216,7 @@ export default function Leads() {
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-muted-foreground">{lead.company || "-"}</TableCell>
                   <TableCell className="hidden lg:table-cell text-muted-foreground">{lead.industry || "-"}</TableCell>
-                  <TableCell className="text-center"><ScoreBadge score={lead.score || 0} /></TableCell>
+                  <TableCell className="text-center"><ScoreBadge score={lead.aiScore ?? 0} /></TableCell>
                   <TableCell className="text-center">
                     <Badge variant="outline" className={statusColor[lead.status] || ""}>{lead.status}</Badge>
                   </TableCell>

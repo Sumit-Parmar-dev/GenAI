@@ -21,19 +21,28 @@ model User {
 }
 
 model Lead {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String
-  company   String?
-  jobRole   String?
-  industry  String?
-  score     Int      @default(0)
-  source    String
-  status    String   @default("New")
-  notes     String?
-  phone     String?
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String
+  phone        String?
+  company      String?
+  jobRole      String?
+  industry     String?
+  source       String
+  budget       Float?
+  status       String    @default("New")
+  aiScore      Int       @default(0)
+  aiCategory   String?   // Hot | Warm | Cold
+  aiReason     String?   @db.Text
+  aiInsight    String?   @db.Text
+  aiEmailDraft String?   @db.Text
+  notes        String?   @db.Text
+  isConverted  Boolean   @default(false)
+  convertedAt  DateTime?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

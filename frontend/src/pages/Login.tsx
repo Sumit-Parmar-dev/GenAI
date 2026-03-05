@@ -27,6 +27,18 @@ export default function Login() {
 
       if (error) throw error;
 
+      // Also authenticate with our custom backend to get a JWT for API calls
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
       toast({ title: "Welcome back!", description: "You've been logged in successfully." });
       navigate("/dashboard");
     } catch (error: any) {

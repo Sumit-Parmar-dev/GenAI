@@ -33,6 +33,14 @@ export default function Register() {
 
       if (error) throw error;
 
+      // Also register with our custom backend so the user exists in Prisma DB
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      await fetch(`${BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+
       toast({
         title: "Account created!",
         description: "Please check your email to verify your account."

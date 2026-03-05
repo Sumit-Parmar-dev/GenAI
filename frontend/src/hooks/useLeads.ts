@@ -5,14 +5,22 @@ export interface Lead {
     id: number;
     name: string;
     email: string;
+    phone?: string;
     source: string;
     status: string;
     userId: number;
     company?: string;
     jobRole?: string;
     industry?: string;
+    budget?: number;
     notes?: string;
-    score?: number;
+    aiScore: number;
+    aiCategory?: string;   // Hot | Warm | Cold
+    aiReason?: string;
+    aiInsight?: string;
+    aiEmailDraft?: string;
+    isConverted: boolean;
+    convertedAt?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -60,5 +68,22 @@ export const useLead = (id: string) => {
         },
     });
 
-    return { getLead, updateLeadMutation };
+    const deleteLeadMutation = useMutation({
+        mutationFn: () =>
+            apiRequest(`/leads/${id}`, { method: "DELETE" }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["leads"] });
+        },
+    });
+
+    const convertLeadMutation = useMutation({
+        mutationFn: () =>
+            apiRequest(`/leads/${id}/convert`, { method: "POST" }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["lead", id] });
+            queryClient.invalidateQueries({ queryKey: ["leads"] });
+        },
+    });
+
+    return { getLead, updateLeadMutation, deleteLeadMutation, convertLeadMutation };
 };
