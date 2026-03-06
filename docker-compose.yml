@@ -40,6 +40,18 @@ services:
     networks:
       - genai-network
 
+  scraper-service:
+    build:
+      context: ./scraper-service
+      dockerfile: Dockerfile
+    environment:
+      - BACKEND_URL=http://backend:5000/api/leads
+      - SCRAPER_API_KEY=super-secret-scraper-key-2026
+    depends_on:
+      - backend
+    networks:
+      - genai-network
+
 networks:
   genai-network:
     driver: bridge

@@ -2,8 +2,12 @@ const prisma = require('../config/prisma');
 
 class LeadDao {
     async createLead(leadData) {
+        const { userId, ...data } = leadData;
         return await prisma.lead.create({
-            data: leadData,
+            data: {
+                ...data,
+                user: { connect: { id: parseInt(userId) } }
+            },
         });
     }
 

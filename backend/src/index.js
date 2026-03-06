@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 
 const authRoutes = require("./routes/auth.routes.js");
 const leadRoutes = require("./routes/lead.routes.js");
+const outreachRoutes = require("./routes/outreach.routes.js");
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(bodyParser.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/leads", leadRoutes);
+app.use("/api/outreach", outreachRoutes);
 
 const PORT = process.env.PORT || 5000;
 

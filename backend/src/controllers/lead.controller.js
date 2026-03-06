@@ -2,17 +2,17 @@ const leadDao = require('../dao/lead.dao');
 const { scoreLead } = require('../services/ml.service');
 
 const ALLOWED_CREATE_FIELDS = [
-    'name', 'email', 'phone', 'company', 'jobRole', 'industry',
+    'name', 'email', 'phone', 'company', 'website', 'jobRole', 'industry',
+    'companySize', 'techStack', 'funding', 'location',
+    'linkedinUrl', 'linkedinFounderUrl',
     'source', 'budget', 'status', 'notes',
-    'aiScore', 'aiCategory', 'aiReason', 'aiInsight', 'aiEmailDraft',
-    'isConverted', 'convertedAt',
 ];
 
 const ALLOWED_UPDATE_FIELDS = [
-    'name', 'email', 'phone', 'company', 'jobRole', 'industry',
+    'name', 'email', 'phone', 'company', 'website', 'jobRole', 'industry',
+    'companySize', 'techStack', 'funding', 'location',
+    'linkedinUrl', 'linkedinFounderUrl',
     'source', 'budget', 'status', 'notes',
-    'aiScore', 'aiCategory', 'aiReason', 'aiInsight', 'aiEmailDraft',
-    'isConverted', 'convertedAt',
 ];
 
 function pickFields(body, allowedFields) {
@@ -40,13 +40,20 @@ async function enrichWithAI(lead) {
 
 exports.createLead = async (req, res) => {
     try {
-        const data = pickFields(req.body, ALLOWED_CREATE_FIELDS);
-        // 1. Save lead first
-        const lead = await leadDao.createLead({ ...data, userId: req.user.id });
-        // 2. Enrich with AI score asynchronously (non-blocking response)
-        res.status(201).json(lead);
-        // 3. Score in background and persist
-        enrichWithAI(lead).catch(() => { });
+        const userId = req.user.id;
+        const leads = Array.isArray(req.body) ? req.body : [req.body];
+
+        const results = [];
+        for (const leadData of leads) {
+            const data = pickFields(leadData, ALLOWED_CREATE_FIELDS);
+            const lead = await leadDao.createLead({ ...data, userId });
+
+            // Enrich with AI score asynchronously
+            enrichWithAI(lead).catch(() => { });
+            results.push(lead);
+        }
+
+        res.status(201).json(Array.isArray(req.body) ? results : results[0]);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

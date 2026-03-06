@@ -23,11 +23,18 @@ model User {
 model Lead {
   id           Int       @id @default(autoincrement())
   name         String
-  email        String
+  email        String?
   phone        String?
   company      String?
+  website      String?
   jobRole      String?
   industry     String?
+  companySize  String?
+  techStack    String?
+  funding      String?
+  location     String?
+  linkedinUrl  String?
+  linkedinFounderUrl String?
   source       String
   budget       Float?
   status       String    @default("New")
