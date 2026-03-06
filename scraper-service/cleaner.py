@@ -2,7 +2,7 @@ import re
 
 def clean_company_name(name):
     if not name: return ""
-    # Remove common suffixes and junk
+  
     name = re.sub(r' (Inc\.|LLC|Corp\.|Ltd\.?|AI|SaaS)$', '', name, flags=re.IGNORECASE)
     return name.strip()
 

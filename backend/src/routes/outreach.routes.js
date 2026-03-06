@@ -2,10 +2,6 @@ const router = require("express").Router();
 const auth = require("../middlewares/auth.middleware");
 const outreachService = require("../services/outreach.service");
 
-/**
- * Outreach Routes
- */
-
 // POST /api/outreach/:leadId - Send email to a specific lead
 router.post("/:leadId", auth, async (req, res) => {
     try {
