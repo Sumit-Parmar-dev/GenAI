@@ -1,7 +1,7 @@
 const prisma = require('../config/prisma');
 
 async function checkLeads() {
-    console.log('--- Checking Leads in Database ---');
+    console.log('--- Checking Leads in DB ---');
     try {
         const leadCount = await prisma.lead.count();
         console.log(`Total Leads: ${leadCount}`);
@@ -26,7 +26,7 @@ async function checkLeads() {
             console.table(latestLeads);
         }
     } catch (err) {
-        console.error('Error fetching leads:', err.message);
+        console.log("error", err);
     } finally {
         await prisma.$disconnect();
     }

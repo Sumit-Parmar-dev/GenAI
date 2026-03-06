@@ -9,8 +9,7 @@ def clean_company_name(name):
 def validate_email(email):
     if not email: return None
     email = email.lower().strip()
-    
-    # Blacklist common catch-all or invalid patterns
+    # abc
     blacklist = ["example", "test", "noreply", "no-reply", "support@", "info@", "admin@"]
     if any(word in email for word in blacklist):
         return None
