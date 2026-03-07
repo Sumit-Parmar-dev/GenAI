@@ -1,0 +1,13 @@
+# Scraper Service Environment
+scraper-service/venv/
+scraper-service/__pycache__/
+scraper-service/.env
+
+# ML Service Environment
+ml-service/venv/
+ml-service/__pycache__/
+ml-service/.env
+
+# Node/Backend
+backend/node_modules/
+frontend/node_modules/
