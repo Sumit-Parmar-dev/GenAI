@@ -4,7 +4,10 @@ from pydantic import BaseModel
 from typing import Optional
 from scorer import score_lead
 
-app = FastAPI(title="LeadIQ ML Scoring Service", version="1.0.0")
+app = FastAPI(
+    title="LeadIQ ML Scoring Service",
+    version="2.0.0"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,19 +18,34 @@ app.add_middleware(
 
 
 class LeadInput(BaseModel):
-    name: str
+
     email: Optional[str] = None
-    phone: Optional[str] = None
     company: Optional[str] = None
-    jobRole: Optional[str] = None
-    industry: Optional[str] = None
-    budget: Optional[float] = None
-    source: Optional[str] = None
+    website: Optional[str] = None
+    domain: Optional[str] = None
+
+    projectTitle: str
+    projectDescription: str
+
+    projectUrl: Optional[str] = None
+    techStack: Optional[str] = None
+
+    budgetValue: Optional[float] = 0.0
+
+    location: Optional[str] = None
+    source: str
+
+    linkedinUrl: Optional[str] = None
+    linkedinFounderUrl: Optional[str] = None
+
+    domainPenalty: Optional[int] = 0
+
     notes: Optional[str] = None
     status: Optional[str] = None
 
 
 class ScoreOutput(BaseModel):
+
     score: int
     category: str
     reason: str
@@ -37,24 +55,43 @@ class ScoreOutput(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "LeadIQ ML Scoring"}
+
+    return {
+        "status": "ok",
+        "service": "LeadIQ ML Scoring"
+    }
 
 
 @app.post("/score", response_model=ScoreOutput)
 def score(lead: LeadInput):
+
     result = score_lead(
-        name=lead.name,
-        budget=lead.budget,
-        industry=lead.industry,
-        job_role=lead.jobRole,
+        name=lead.company or "Founder",
+        company=lead.company or "Unknown",
+
+        project_title=lead.projectTitle,
+        project_description=lead.projectDescription,
+
+        tech_stack=lead.techStack or "Unknown",
+
+        budget_range="N/A",
+        budget_value=lead.budgetValue or 0.0,
+
+        country=lead.location or "Remote",
+
         source=lead.source,
-        notes=lead.notes,
-        company=lead.company,
+
+        email=lead.email,
+        linkedin=lead.linkedinUrl or lead.linkedinFounderUrl,
+        website=lead.website,
+
+        domain_penalty=lead.domainPenalty or 0
     )
+
     return ScoreOutput(
         score=result.score,
         category=result.category,
         reason=result.reason,
         insight=result.insight,
-        emailDraft=result.email_draft,
+        emailDraft=result.email_draft
     )

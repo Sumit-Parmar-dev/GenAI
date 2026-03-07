@@ -7,6 +7,7 @@ const authRoutes = require("./routes/auth.routes.js");
 const leadRoutes = require("./routes/lead.routes.js");
 const outreachRoutes = require("./routes/outreach.routes.js");
 
+// Initialize express app
 const app = express();
 
 app.use(cors());

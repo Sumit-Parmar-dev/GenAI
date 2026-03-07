@@ -8,6 +8,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -21,31 +23,45 @@ model User {
 }
 
 model Lead {
-  id           Int       @id @default(autoincrement())
-  name         String
+  id           Int      @id @default(autoincrement())
+
   email        String?
-  phone        String?
   company      String?
   website      String?
-  jobRole      String?
+  domain       String?
   industry     String?
-  companySize  String?
-  techStack    String?
-  funding      String?
-  location     String?
-  linkedinUrl  String?
-  linkedinFounderUrl String?
-  source       String
-  budget       Float?
-  status       String    @default("New")
-  aiScore      Int       @default(0)
-  aiCategory   String?   // Hot | Warm | Cold
-  aiReason     String?   @db.Text
-  aiInsight    String?   @db.Text
-  aiEmailDraft String?   @db.Text
-  notes        String?   @db.Text
-  isConverted  Boolean   @default(false)
-  convertedAt  DateTime?
+
+  projectTitle       String?
+  projectDescription String? @db.Text
+  projectUrl         String?
+
+  techStack      String?
+  budgetValue    Float?
+
+  location       String?
+
+  linkedinUrl         String?
+  linkedinFounderUrl  String?
+
+  source         String
+
+  status         String  @default("New")
+
+  aiScore        Int     @default(0)
+  aiCategory     String?
+  aiReason       String? @db.Text
+  aiInsight      String? @db.Text
+  aiEmailDraft   String? @db.Text
+
+  baseSignal     Int?
+
+  isManual       Boolean @default(false)
+  leadType       String  @default("Intelligence")
+
+  notes          String? @db.Text
+
+  isConverted    Boolean @default(false)
+  convertedAt    DateTime?
 
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -9,7 +9,7 @@ const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
 async function scoreLead(leadData) {
     try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
+        const timeout = setTimeout(() => controller.abort(), 10000);
 
         const response = await fetch(`${ML_SERVICE_URL}/score`, {
             method: 'POST',
@@ -19,10 +19,18 @@ async function scoreLead(leadData) {
                 email: leadData.email,
                 phone: leadData.phone,
                 company: leadData.company,
-                jobRole: leadData.jobRole,
-                industry: leadData.industry,
-                budget: leadData.budget ? Number(leadData.budget) : null,
+                projectTitle: leadData.projectTitle,
+                projectDescription: leadData.projectDescription,
+                techStack: leadData.techStack,
+                budgetRange: leadData.budgetRange,
+                budgetValue: leadData.budgetValue || 0,
+                deadline: leadData.deadline,
+                country: leadData.country,
                 source: leadData.source,
+                domain: leadData.domain,
+                domainPenalty: leadData.domainPenalty || 0,
+                linkedinUrl: leadData.linkedinUrl,
+                website: leadData.website,
                 notes: leadData.notes,
                 status: leadData.status,
             }),

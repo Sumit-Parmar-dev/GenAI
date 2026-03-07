@@ -20,7 +20,8 @@ def send_leads(leads):
 
     try:
         print(f"[Sender] Sending {len(leads)} leads to {BACKEND_URL}...")
-        response = requests.post(BACKEND_URL, json=leads, headers=headers, timeout=10)
+        # Increased timeout to 60s because backend processes leads one by one with AI enrichment
+        response = requests.post(BACKEND_URL, json=leads, headers=headers, timeout=60)
         
         if response.status_code in [200, 201]:
             print(f"[Sender] Success: {response.json()}")

@@ -2,17 +2,19 @@ const leadDao = require('../dao/lead.dao');
 const { scoreLead } = require('../services/ml.service');
 
 const ALLOWED_CREATE_FIELDS = [
-    'name', 'email', 'phone', 'company', 'website', 'jobRole', 'industry',
-    'companySize', 'techStack', 'funding', 'location',
+    'email', 'company', 'website', 'domain', 'industry',
+    'projectTitle', 'projectDescription', 'projectUrl',
+    'techStack', 'budgetValue', 'location',
     'linkedinUrl', 'linkedinFounderUrl',
-    'source', 'budget', 'status', 'notes',
+    'source', 'status', 'baseSignal', 'notes', 'isManual', 'leadType'
 ];
 
 const ALLOWED_UPDATE_FIELDS = [
-    'name', 'email', 'phone', 'company', 'website', 'jobRole', 'industry',
-    'companySize', 'techStack', 'funding', 'location',
+    'email', 'company', 'website', 'domain', 'industry',
+    'projectTitle', 'projectDescription', 'projectUrl',
+    'techStack', 'budgetValue', 'location',
     'linkedinUrl', 'linkedinFounderUrl',
-    'source', 'budget', 'status', 'notes',
+    'source', 'status', 'baseSignal', 'notes', 'isManual', 'leadType'
 ];
 
 function pickFields(body, allowedFields) {
@@ -48,9 +50,9 @@ exports.createLead = async (req, res) => {
             const data = pickFields(leadData, ALLOWED_CREATE_FIELDS);
             const lead = await leadDao.createLead({ ...data, userId });
 
-            // Enrich with AI score asynchronously
-            enrichWithAI(lead).catch(() => { });
-            results.push(lead);
+            // Enrich with AI score - await it so the response has the data
+            const enriched = await enrichWithAI(lead).catch(() => lead);
+            results.push(enriched);
         }
 
         res.status(201).json(Array.isArray(req.body) ? results : results[0]);
@@ -133,6 +135,15 @@ exports.rescoreLead = async (req, res) => {
         });
         console.log(`[AI] Lead #${lead.id} re-scored: ${aiResult.score} (${aiResult.category})`);
         res.json(updated);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+/** GET /analytics — Get source performance stats */
+exports.getAnalytics = async (req, res) => {
+    try {
+        const stats = await leadDao.getSourceAnalytics(req.user.id);
+        res.json(stats);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

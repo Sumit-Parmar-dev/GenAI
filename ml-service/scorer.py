@@ -1,95 +1,9 @@
 """
-Lead Scoring Engine — 5 signal dimensions, each contributing 0–20 pts (total 0–100)
+LeadIQ Scoring Engine
+Startup Project Lead Intelligence
 """
 
 from dataclasses import dataclass
-from typing import Optional
-import re
-
-# ── Signal weights (each max 20) ────────────────────────────────────────────
-
-HOT_INDUSTRIES = {"technology", "tech", "finance", "financial", "banking", "healthcare",
-                  "health", "pharma", "pharmaceutical", "software", "saas", "ai",
-                  "artificial intelligence", "cybersecurity"}
-WARM_INDUSTRIES = {"retail", "education", "media", "marketing", "consulting",
-                   "insurance", "real estate", "manufacturing", "logistics"}
-
-SENIOR_TITLES = {"ceo", "cto", "coo", "cfo", "founder", "co-founder", "president",
-                 "vp", "vice president", "svp", "evp", "head of", "chief"}
-MID_TITLES = {"director", "manager", "lead", "principal", "senior"}
-
-HOT_SOURCES = {"referral"}
-WARM_SOURCES = {"linkedin", "partner", "event", "conference"}
-MED_SOURCES = {"website", "organic", "seo"}
-
-URGENCY_KEYWORDS = ["urgent", "asap", "immediately", "right away", "need now",
-                    "demo", "trial", "pilot", "poc", "proof of concept",
-                    "budget approved", "budget available", "ready to buy",
-                    "ready to implement", "looking to", "interested in purchasing",
-                    "evaluate", "shortlist", "decision", "deadline"]
-
-
-def score_budget(budget: Optional[float]) -> tuple[int, str]:
-    if budget is None:
-        return 5, "No budget specified"
-    if budget >= 100_000:
-        return 20, f"Very high budget (${budget:,.0f})"
-    if budget >= 50_000:
-        return 17, f"High budget (${budget:,.0f})"
-    if budget >= 10_000:
-        return 13, f"Moderate budget (${budget:,.0f})"
-    if budget >= 1_000:
-        return 8, f"Small budget (${budget:,.0f})"
-    return 3, f"Very low budget (${budget:,.0f})"
-
-
-def score_industry(industry: Optional[str]) -> tuple[int, str]:
-    if not industry:
-        return 7, "Industry not specified"
-    norm = industry.lower().strip()
-    if any(h in norm for h in HOT_INDUSTRIES):
-        return 20, f"{industry} is a high-value industry"
-    if any(w in norm for w in WARM_INDUSTRIES):
-        return 12, f"{industry} is a moderate-value industry"
-    return 7, f"{industry} is a standard industry"
-
-
-def score_job_role(job_role: Optional[str]) -> tuple[int, str]:
-    if not job_role:
-        return 7, "Job role not specified"
-    norm = job_role.lower().strip()
-    if any(s in norm for s in SENIOR_TITLES):
-        return 20, f"{job_role} is a senior decision-maker"
-    if any(m in norm for m in MID_TITLES):
-        return 13, f"{job_role} has purchasing influence"
-    return 7, f"{job_role} has limited direct buying authority"
-
-
-def score_source(source: Optional[str]) -> tuple[int, str]:
-    if not source:
-        return 6, "Unknown source"
-    norm = source.lower().strip()
-    if any(h in norm for h in HOT_SOURCES):
-        return 20, f"Referral leads have highest conversion rates"
-    if any(w in norm for w in WARM_SOURCES):
-        return 16, f"{source} is a high-quality inbound channel"
-    if any(m in norm for m in MED_SOURCES):
-        return 12, f"{source} is an organic inbound channel"
-    return 6, f"{source} is a standard acquisition channel"
-
-
-def score_engagement(notes: Optional[str]) -> tuple[int, str]:
-    if not notes:
-        return 0, "No engagement notes provided"
-    norm = notes.lower()
-    hits = [kw for kw in URGENCY_KEYWORDS if kw in norm]
-    if len(hits) >= 3:
-        return 20, f"Strong buying signals: {', '.join(hits[:3])}"
-    if len(hits) == 2:
-        return 15, f"Clear buying intent: {', '.join(hits)}"
-    if len(hits) == 1:
-        return 8, f"Some engagement signal: {hits[0]}"
-    return 2, "Notes provided but no strong buying signals detected"
 
 
 @dataclass
@@ -101,108 +15,206 @@ class ScoreResult:
     email_draft: str
 
 
-def categorize(score: int) -> str:
-    if score >= 70:
-        return "Hot"
-    if score >= 40:
-        return "Warm"
-    return "Cold"
+# --------------------------------
+
+def score_source(source):
+
+    weights = {
+        "yc": 15,
+        "angellist": 12,
+        "producthunt": 10,
+        "indiehackers": 8,
+        "reddit": 5,
+        "freelancer": 5,
+        "upwork": 3
+    }
+
+    return weights.get(source.lower(), 3)
 
 
-def build_reason(budget_note, industry_note, role_note, source_note, eng_note,
-                 budget_pts, industry_pts, role_pts, source_pts, eng_pts) -> str:
-    parts = []
-    if budget_pts >= 17:
-        parts.append(budget_note)
-    if industry_pts >= 17:
-        parts.append(industry_note)
-    if role_pts >= 17:
-        parts.append(role_note)
-    if source_pts >= 16:
-        parts.append(source_note)
-    if eng_pts >= 8:
-        parts.append(eng_note)
-    if not parts:
-        parts = [budget_note, industry_note]
-    return ". ".join(parts) + "."
+# --------------------------------
+
+def score_budget(budget_value):
+
+    if budget_value > 5000:
+        return 15
+
+    if budget_value > 1000:
+        return 10
+
+    if budget_value > 200:
+        return 5
+
+    if budget_value > 0 and budget_value < 50:
+        return -15
+
+    return 0
 
 
-def build_insight(score: int, category: str, name: str, company: Optional[str]) -> str:
-    target = company or "their organization"
-    if category == "Hot":
-        return (f"{name} at {target} shows strong purchase intent and senior authority. "
-                "Prioritize immediate outreach — schedule a demo or discovery call within 24 hours.")
-    if category == "Warm":
-        return (f"{name} at {target} is a promising lead with moderate engagement. "
-                "Nurture with value-driven content and follow up within 3–5 business days.")
-    return (f"{name} at {target} is an early-stage lead. "
-            "Add to a long-term nurture sequence and re-evaluate after further engagement.")
+# --------------------------------
+
+def score_contact(email, linkedin, website):
+
+    score = 0
+
+    if email:
+        score += 8
+
+    if linkedin:
+        score += 7
+
+    if website:
+        score += 5
+
+    return score
 
 
-def build_email_draft(name: str, job_role: Optional[str], company: Optional[str],
-                      category: str, industry: Optional[str]) -> str:
-    first_name = name.split()[0] if name else "there"
-    role = job_role or "professional"
-    org = company or "your organization"
-    ind = industry or "your industry"
+# --------------------------------
 
-    if category == "Hot":
+def score_requirement(title, desc):
+
+    text = (title + " " + desc).lower()
+
+    score = 0
+
+    # startup signals
+    startup_words = ["startup", "mvp", "launch", "build product", "saas"]
+
+    if any(w in text for w in startup_words):
+        score += 10
+
+    # ai projects
+    if "ai" in text or "machine learning" in text:
+        score += 15
+
+    # tech complexity
+    complexity = [
+        "api",
+        "dashboard",
+        "automation",
+        "integration",
+        "crm",
+        "portal"
+    ]
+
+    if any(w in text for w in complexity):
+        score += 10
+
+    # description detail
+    if len(desc) > 300:
+        score += 10
+
+    elif len(desc) > 120:
+        score += 5
+
+    return score
+
+
+# --------------------------------
+
+def categorize(score):
+
+    if score >= 75:
+        return "HOT"
+
+    if score >= 55:
+        return "WARM"
+
+    return "COLD"
+
+
+# --------------------------------
+
+def build_insight(score, category, company, project):
+
+    if category == "HOT":
+
         return (
-            f"Subject: Quick question about {org}'s goals\n\n"
-            f"Hi {first_name},\n\n"
-            f"I noticed you're a {role} at {org} — exciting work in {ind}.\n\n"
-            f"We've helped similar companies achieve measurable results quickly, "
-            f"and based on your profile, I think we could do the same for you.\n\n"
-            f"Would you be open to a 20-minute call this week to explore if there's a fit?\n\n"
-            f"Best,\n[Your Name]"
+            f"🔥 HOT LEAD: {company} is actively building "
+            f"{project}. Score {score}. Immediate outreach recommended."
         )
-    if category == "Warm":
+
+    if category == "WARM":
+
         return (
-            f"Subject: Helping {org} with {ind} challenges\n\n"
-            f"Hi {first_name},\n\n"
-            f"As a {role}, you're likely navigating some complex decisions in {ind} right now.\n\n"
-            f"I'd love to share a few resources that have helped similar teams — "
-            f"no strings attached.\n\n"
-            f"Would that be useful? Happy to send them over.\n\n"
-            f"Best,\n[Your Name]"
+            f"✨ WARM LEAD: {company} has a solid project "
+            f"({project}). Score {score}. Worth contacting."
         )
+
     return (
-        f"Subject: A resource for {role}s in {ind}\n\n"
-        f"Hi {first_name},\n\n"
-        f"I came across your profile and thought you might find this relevant to "
-        f"what teams like yours are working on in {ind}.\n\n"
-        f"Feel free to reach out if you'd like to chat — no pressure at all.\n\n"
-        f"Best,\n[Your Name]"
+        f"❄️ COLD LEAD: {company} is a low priority lead."
     )
 
 
-def score_lead(
-    name: str,
-    budget: Optional[float] = None,
-    industry: Optional[str] = None,
-    job_role: Optional[str] = None,
-    source: Optional[str] = None,
-    notes: Optional[str] = None,
-    company: Optional[str] = None,
-    **kwargs,
-) -> ScoreResult:
-    b_pts, b_note = score_budget(budget)
-    i_pts, i_note = score_industry(industry)
-    r_pts, r_note = score_job_role(job_role)
-    s_pts, s_note = score_source(source)
-    e_pts, e_note = score_engagement(notes)
+# --------------------------------
 
-    total = b_pts + i_pts + r_pts + s_pts + e_pts
-    category = categorize(total)
-    reason = build_reason(b_note, i_note, r_note, s_note, e_note,
-                          b_pts, i_pts, r_pts, s_pts, e_pts)
-    insight = build_insight(total, category, name, company)
-    email_draft = build_email_draft(name, job_role, company, category, industry)
+def build_email_draft(company, project, tech):
+
+    name = company if company and company != "Unknown" else "there"
+
+    return f"""
+Subject: Help building your {project}
+
+Hi {name},
+
+I saw you're working on {project} and thought I'd reach out.
+
+I help startups build products quickly using modern stacks like {tech}.
+If you're still looking for help launching or improving the project,
+I'd love to chat.
+
+Best,
+[Your Name]
+"""
+
+
+# --------------------------------
+
+def score_lead(
+    name,
+    company,
+    project_title,
+    project_description,
+    tech_stack,
+    budget_range,
+    budget_value,
+    country,
+    source,
+    email=None,
+    linkedin=None,
+    website=None,
+    domain_penalty=0
+):
+
+    score = 40  # baseline
+
+    score += score_source(source)
+
+    score += score_budget(budget_value)
+
+    score += score_contact(email, linkedin, website)
+
+    score += score_requirement(project_title, project_description)
+
+    score -= domain_penalty
+
+    score = max(0, min(100, score))
+
+    category = categorize(score)
+
+    reason = (
+        f"Source:{source}, Budget:{budget_value}, "
+        f"Tech:{tech_stack}"
+    )
+
+    insight = build_insight(score, category, company, project_title)
+
+    email_draft = build_email_draft(company, project_title, tech_stack)
 
     return ScoreResult(
-        score=total,
+        score=score,
         category=category,
         reason=reason,
         insight=insight,
-        email_draft=email_draft,
+        email_draft=email_draft
     )

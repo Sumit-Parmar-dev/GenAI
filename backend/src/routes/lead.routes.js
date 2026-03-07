@@ -8,8 +8,10 @@ const {
     deleteLead,
     convertLead,
     rescoreLead,
+    getAnalytics,
 } = require("../controllers/lead.controller");
 
+router.get("/analytics", auth, getAnalytics);
 router.post("/", auth, createLead);
 router.get("/", auth, getLeads);
 router.get("/:id", auth, getLead);

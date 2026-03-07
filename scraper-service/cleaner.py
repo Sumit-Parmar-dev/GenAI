@@ -1,41 +1,135 @@
+# cleaner.py
+
 import re
 
-def clean_company_name(name):
-    if not name: return ""
-  
-    name = re.sub(r' (Inc\.|LLC|Corp\.|Ltd\.?|AI|SaaS)$', '', name, flags=re.IGNORECASE)
-    return name.strip()
 
-def validate_email(email):
-    if not email: return None
-    email = email.lower().strip()
-    # abc
-    blacklist = ["example", "test", "noreply", "no-reply", "support@", "info@", "admin@"]
-    if any(word in email for word in blacklist):
-        return None
-        
-    pattern = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
-    if re.match(pattern, email):
-        return email
+EMAIL_REGEX = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
+
+
+INTENT_KEYWORDS = [
+    "build",
+    "develop",
+    "create",
+    "design",
+    "looking for",
+    "need developer",
+    "need designer",
+    "build website",
+    "build app",
+    "build saas",
+    "build platform",
+    "build ai",
+    "mobile app",
+    "web app",
+    "landing page",
+    "shopify",
+    "wordpress"
+]
+
+
+REJECT_KEYWORDS = [
+    "funding",
+    "raised",
+    "investment",
+    "guide",
+    "tutorial",
+    "story",
+    "case study",
+    "launch story"
+]
+
+
+def extract_email(text):
+
+    emails = re.findall(EMAIL_REGEX, text)
+
+    if emails:
+        return emails[0]
+
     return None
 
-def normalize_lead(lead):
-    """Normalize lead data for database ingestion"""
-    name = lead.get("company_name") or lead.get("company") or "Unknown Company"
-    return {
-        "name": lead.get("founder_name") or "Contact",
-        "email": validate_email(lead.get("email")),
-        "company": clean_company_name(name),
-        "website": lead.get("website"),
-        "industry": lead.get("industry"),
-        "jobRole": lead.get("jobRole"),
-        "companySize": lead.get("companySize"),
-        "techStack": lead.get("techStack"),
-        "funding": lead.get("funding"),
-        "location": lead.get("location"),
-        "linkedinUrl": lead.get("linkedinUrl"),
-        "linkedinFounderUrl": lead.get("linkedinFounderUrl"),
-        "source": lead.get("source") or "Scraper",
-        "notes": lead.get("notes"),
-        "userId": 1 # Default assigned user
-    }
+
+def classify_intent(text):
+
+    text = text.lower()
+
+    if "website" in text:
+        return "Build Website"
+
+    if "mobile app" in text:
+        return "Build App"
+
+    if "saas" in text:
+        return "Build SaaS"
+
+    if "designer" in text:
+        return "Need Designer"
+
+    if "developer" in text:
+        return "Need Developer"
+
+    if "ai" in text:
+        return "AI Project"
+
+    return "General Build"
+
+
+def is_valid_lead(text):
+
+    text = text.lower()
+
+    for reject in REJECT_KEYWORDS:
+        if reject in text:
+            return False
+
+    for keyword in INTENT_KEYWORDS:
+        if keyword in text:
+            return True
+
+    return False
+
+
+def clean_leads(raw_leads):
+
+    cleaned = []
+
+    for lead in raw_leads:
+
+        title = lead.get("title", "")
+        description = lead.get("description", "")
+
+        combined = f"{title} {description}"
+
+        if not is_valid_lead(combined):
+
+            print(f"[Cleaner] Intent filter caught (not hiring): {title[:40]}")
+
+            continue
+
+        email = lead.get("email")
+
+        if not email:
+            email = extract_email(description)
+
+        intent = classify_intent(combined)
+
+        cleaned_lead = {
+            "name": lead.get("name"),
+            "email": email,
+            "company": lead.get("company"),
+            "website": lead.get("website"),
+            "projectTitle": title,
+            "projectDescription": description,
+            "leadIntent": intent,
+            "techStack": lead.get("techStack"),
+            "budgetRange": lead.get("budget"),
+            "country": lead.get("country"),
+            "linkedinFounderUrl": lead.get("linkedin"),
+            "source": lead.get("source")
+        }
+
+        cleaned.append(cleaned_lead)
+
+    print(f"[Cleaner] {len(cleaned)} leads passed filters.")
+
+    return cleaned
